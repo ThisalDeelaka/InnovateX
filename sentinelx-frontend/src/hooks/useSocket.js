@@ -1,3 +1,4 @@
+// src/hooks/useSocket.js
 import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 
@@ -6,7 +7,6 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
 
 // Kiosk roster (you can add/remove; RC1 is the regular counter)
 const ALL_KIOSKS = ['SCC1', 'SCC2', 'SCC3', 'SCC4', 'RC1'];
-
 const INITIAL_KIOSKS = Object.fromEntries(ALL_KIOSKS.map(k => [k, 'idle']));
 
 // How long until a kiosk is marked offline without fresh "live" (ms)
@@ -15,7 +15,7 @@ const OFFLINE_TTL_MS = 5000;
 // Throttle per-station live basket updates (ms)
 const THROTTLE_MS = 150;
 
-// --- helpers ---------------------------------------------------------
+// ---------------- helpers: validation & status -----------------------
 
 const deriveStatus = (score = 0) => {
   if (score >= 0.85) return 'alert';
@@ -30,23 +30,40 @@ const mapSeverity = (score = 0) => {
   return 'low';
 };
 
-// Build a deterministic key for items, to avoid React list flicker
+// is "all fields null/undefined/empty"?
+const isAllNullish = (obj) => {
+  if (!obj || typeof obj !== 'object') return true;
+  return Object.values(obj).every(v =>
+    v === null ||
+    v === undefined ||
+    (typeof v === 'string' && v.trim() === '')
+  );
+};
+
+// Validate signals by type
+const isValidPOS = (x = {}) => !!(x.sku || x.product_name);        // at least name or sku
+const isValidRFID = (x = {}) => !!(x.sku || x.epc);                 // at least sku or epc
+const isValidVision = (x = {}) =>
+  !!(x.predicted_product && (x.accuracy == null || x.accuracy >= 0.5)); // low bar, tuneable
+
+// Stable deterministic key (no "unknown:...")
 const stableKey = (x = {}) => {
+  if (!x || typeof x !== 'object') return null;
   if (x.sku) return `sku:${String(x.sku).toLowerCase()}`;
   if (x.product_name) return `name:${String(x.product_name).toLowerCase()}`;
   if (x.predicted_product) return `vision:${String(x.predicted_product).toLowerCase()}`;
-  if (x.epc) return `epc:${x.epc}`;
-  // last resort: JSON signature (no Math.random)
-  return `unknown:${JSON.stringify(x)}`;
+  if (x.epc) return `epc:${String(x.epc)}`;
+  return null; // don't invent keys for empty signals
 };
 
 // Merge live POS/RFID/Vision signals into one basket for a station
 const buildBasket = (station, live = {}) => {
   const map = new Map();
 
-  // POS gives us name/price/weight and is primary for quantity
+  // POS as primary for name/price/quantity
   for (const x of live.pos || []) {
-    const key = stableKey(x);
+    if (!isValidPOS(x) || isAllNullish(x)) continue;
+    const key = stableKey(x) || `pos-${x.sku || x.product_name}`;
     const prev = map.get(key);
     if (prev) {
       prev.quantity += 1;
@@ -66,7 +83,8 @@ const buildBasket = (station, live = {}) => {
 
   // RFID presence
   for (const r of live.rfid || []) {
-    const key = stableKey(r);
+    if (!isValidRFID(r) || isAllNullish(r)) continue;
+    const key = stableKey(r) || `rfid-${r.sku || r.epc}`;
     const cur =
       map.get(key) ||
       {
@@ -85,7 +103,8 @@ const buildBasket = (station, live = {}) => {
 
   // Vision presence
   for (const v of live.vision || []) {
-    const key = stableKey(v);
+    if (!isValidVision(v) || isAllNullish(v)) continue;
+    const key = stableKey(v) || `vision-${v.predicted_product}`;
     const cur =
       map.get(key) ||
       {
@@ -107,11 +126,11 @@ const buildBasket = (station, live = {}) => {
     consensusScore: live.score || 0,
     items: Array.from(map.values()),
     timestamp: new Date().toISOString(),
-    reasons: live.reasons || [], // optional: if backend includes evidence
+    reasons: live.reasons || [], // optional: if backend includes evidence strings
   };
 };
 
-// --- hook ------------------------------------------------------------
+// ---------------- React hook ----------------------------------------
 
 export function useSocket() {
   const socketRef = useRef(null);
@@ -120,8 +139,7 @@ export function useSocket() {
   // per-kiosk status (idle/active/alert/offline)
   const [kiosks, setKiosks] = useState(INITIAL_KIOSKS);
 
-  // per-kiosk live basket
-  // shape: { SCC1: LiveBasket, SCC2: LiveBasket, ... }
+  // per-kiosk live basket: { SCC1: LiveBasket, SCC2: LiveBasket, ... }
   const [baskets, setBaskets] = useState({});
 
   // incidents (mapped to UI shape)
@@ -130,7 +148,7 @@ export function useSocket() {
   // last "live" timestamp per station (to mark offline)
   const lastSeenRef = useRef({}); // { SCC1: epoch_ms, ... }
 
-  // throttle to reduce flicker: last update time per station
+  // throttle: last update time per station
   const lastUpdateRef = useRef({}); // { SCC1: epoch_ms, ... }
 
   useEffect(() => {
@@ -152,7 +170,7 @@ export function useSocket() {
       const station = payload?.station || 'SCC?';
       const live = payload?.live || {};
 
-      // record last seen
+      // mark last seen
       lastSeenRef.current[station] = Date.now();
 
       // Update kiosk status derived from the consensus score
