@@ -17,8 +17,9 @@ export function LiveBasket({ basket }) {
   const scoreLabel = getScoreLabel(consensusScore);
 
   return (
-    <Panel>
-      <div className="flex items-center justify-between mb-6">
+    <Panel className="h-[min(82vh,46rem)] min-h-[28rem] flex flex-col gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <Header
           title={`Live Basket — ${kioskId}`}
           icon={<ShoppingBasket className="w-6 h-6 text-cyan-400" />}
@@ -36,7 +37,7 @@ export function LiveBasket({ basket }) {
 
       {/* Reasons / Nudges */}
       {Array.isArray(reasons) && reasons.length > 0 && (
-        <div className="mb-4">
+        <div className="mb-1">
           <div className="flex items-center gap-2 text-slate-300 mb-2">
             <Info className="w-4 h-4 text-amber-400" />
             <span className="text-sm font-medium">Nudges</span>
@@ -54,10 +55,16 @@ export function LiveBasket({ basket }) {
         </div>
       )}
 
-      {/* Items */}
-      <div className="space-y-3">
+      {/* Items (auto-grows + scrolls) */}
+      <div
+        className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1"
+        role="list"
+        aria-label="Basket items"
+      >
         {items.length === 0 ? (
-          <EmptyState />
+          <div className="h-full grid place-items-center">
+            <EmptyState />
+          </div>
         ) : (
           items.map((item) => (
             <ItemRow key={item.id || `${item.name}-${item.price}`} item={item} />
@@ -66,15 +73,19 @@ export function LiveBasket({ basket }) {
       </div>
 
       {/* Footer */}
-      <div className="mt-6 pt-6 border-t border-slate-700 flex items-center justify-between text-xs text-slate-500">
-        <span>Total</span>
-        <span className="text-white text-xl font-bold">
-          ${items.reduce((sum, it) => sum + (it.price || 0) * (it.quantity || 1), 0).toFixed(2)}
-        </span>
-      </div>
-
-      <div className="mt-2 text-right text-[11px] text-slate-500">
-        Last updated: {new Date(timestamp).toLocaleTimeString()}
+      <div className="pt-4 border-t border-slate-700">
+        <div className="flex items-center justify-between text-xs text-slate-500">
+          <span>Total</span>
+          <span className="text-white text-xl font-bold">
+            $
+            {items
+              .reduce((sum, it) => sum + (it.price || 0) * (it.quantity || 1), 0)
+              .toFixed(2)}
+          </span>
+        </div>
+        <div className="mt-2 text-right text-[11px] text-slate-500">
+          Last updated: {timestamp ? new Date(timestamp).toLocaleTimeString() : '—'}
+        </div>
       </div>
     </Panel>
   );
@@ -82,9 +93,11 @@ export function LiveBasket({ basket }) {
 
 /* -------------------------- Subcomponents -------------------------- */
 
-function Panel({ children }) {
+function Panel({ children, className = '' }) {
   return (
-    <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl p-8 shadow-2xl border border-slate-700">
+    <div
+      className={`bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl p-8 shadow-2xl border border-slate-700 ${className}`}
+    >
       {children}
     </div>
   );
