@@ -1,0 +1,2 @@
+{"dataset":"Product_recognism","event":{"timestamp":"2025-08-13T16:15:18","station_id":"SCC1","status":"Active","data":{"predicted_product":"PRD_F_08","accuracy":0.90}}}
+{"dataset":"POS_Transactions","event":{"timestamp":"2025-08-13T16:15:20","station_id":"SCC1","status":"Active","data":{"customer_id":"C009","sku":"PRD_F_07","product_name":"Fruit 07","price":3.99,"weight_g":420}}}

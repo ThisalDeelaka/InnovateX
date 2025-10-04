@@ -1,0 +1,3 @@
+{"dataset":"POS_Transactions","event":{"timestamp":"2025-08-13T16:05:42","station_id":"SCC1","status":"Active","data":{"customer_id":"C004"}}}
+{"dataset":"Product_recognism","event":{"timestamp":"2025-08-13T16:05:45","station_id":"SCC1","status":"Active","data":{"predicted_product":"PRD_S_04","accuracy":0.92}}}
+{"dataset":"RFID_data","event":{"timestamp":"2025-08-13T16:05:46","station_id":"SCC1","status":"Active","data":{"epc":"EPC-XYZ","location":"IN_BAG","sku":"PRD_S_04"}}}

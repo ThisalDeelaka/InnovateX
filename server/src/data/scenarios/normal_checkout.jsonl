@@ -1,0 +1,3 @@
+{"dataset":"POS_Transactions","event":{"timestamp":"2025-08-13T16:00:00","station_id":"SCC1","status":"Active","data":{"customer_id":"C001","sku":"PRD_F_03","product_name":"Fruit 03","price":2.5,"weight_g":425}}}
+{"dataset":"Product_recognism","event":{"timestamp":"2025-08-13T16:00:02","station_id":"SCC1","status":"Active","data":{"predicted_product":"PRD_F_03","accuracy":0.88}}}
+{"dataset":"RFID_data","event":{"timestamp":"2025-08-13T16:00:03","station_id":"SCC1","status":"Active","data":{"epc":"EPC-F-03","location":"SCAN_AREA","sku":"PRD_F_03"}}}

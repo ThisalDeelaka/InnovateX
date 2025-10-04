@@ -1,0 +1,2 @@
+{"dataset":"RFID_data","event":{"timestamp":"2025-08-13T16:12:15","station_id":"SCC3","status":"Active","data":{"epc":"EPC-OUT-123","location":"EXIT_GATE","sku":"PRD_X_01"}}}
+{"dataset":"Queue_monitor","event":{"timestamp":"2025-08-13T16:12:16","station_id":"SCC3","status":"Active","data":{"customer_count":2,"average_dwell_time":30}}}
