@@ -9,10 +9,12 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
- "dependencies": {
+  "dependencies": {
     "lucide-react": "^0.458.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^7.9.3",
+    "react-speech-recognition": "^4.0.1",
     "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
