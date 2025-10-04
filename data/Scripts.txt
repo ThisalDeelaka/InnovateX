@@ -1,0 +1,3 @@
+py .\stream_server.py --port 8765 --speed 10 --loop
+
+py client_example.py --host 127.0.0.1 --port 8765 --limit 5
